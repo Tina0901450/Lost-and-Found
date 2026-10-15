@@ -1,0 +1,1685 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>拾光 · 校园失物招领</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@500;700&family=ZCOOL+XiaoWei&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #1a2a2e;
+      --muted: #5a6f76;
+      --paper: #f3f7f5;
+      --panel: rgba(255, 255, 255, 0.82);
+      --accent: #e07a3d;
+      --accent-deep: #c45e22;
+      --teal: #1f6f6a;
+      --teal-soft: #2a9d8f;
+      --line: rgba(26, 42, 46, 0.12);
+      --shadow: 0 24px 60px rgba(26, 42, 46, 0.18);
+      --radius: 22px;
+      --font-brand: "ZCOOL XiaoWei", "Noto Serif SC", serif;
+      --font-display: "Noto Serif SC", serif;
+      --font-body: "DM Sans", "Noto Serif SC", sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      font-family: var(--font-body);
+      color: var(--ink);
+      background:
+        radial-gradient(ellipse 80% 60% at 10% 20%, rgba(42, 157, 143, 0.28), transparent 55%),
+        radial-gradient(ellipse 70% 50% at 90% 10%, rgba(224, 122, 61, 0.22), transparent 50%),
+        radial-gradient(ellipse 60% 40% at 50% 100%, rgba(31, 111, 106, 0.18), transparent 55%),
+        linear-gradient(165deg, #e8f2ef 0%, #f7f3ee 45%, #eef4f6 100%);
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.35;
+      background-image:
+        linear-gradient(rgba(26, 42, 46, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(26, 42, 46, 0.03) 1px, transparent 1px);
+      background-size: 48px 48px;
+      mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
+    }
+
+    /* —— Entry gate —— */
+    .gate {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background:
+        radial-gradient(ellipse 90% 70% at 50% 40%, rgba(243, 247, 245, 0.55), rgba(26, 42, 46, 0.35));
+      backdrop-filter: blur(8px);
+      animation: fadeIn 0.5s ease both;
+    }
+
+    .gate[hidden] { display: none; }
+
+    .gate-inner {
+      width: min(980px, 100%);
+      text-align: center;
+    }
+
+    .gate-brand {
+      font-family: var(--font-brand);
+      font-size: clamp(3rem, 8vw, 4.8rem);
+      letter-spacing: 0.08em;
+      color: var(--ink);
+      animation: rise 0.7s ease both;
+    }
+
+    .gate-sub {
+      margin: 10px auto 36px;
+      max-width: 28em;
+      color: var(--muted);
+      font-size: 1.05rem;
+      line-height: 1.6;
+      animation: rise 0.7s 0.1s ease both;
+    }
+
+    .gate-modules {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      animation: rise 0.7s 0.18s ease both;
+    }
+
+    .gate-card {
+      border: 0;
+      cursor: pointer;
+      text-align: left;
+      padding: 32px 28px;
+      border-radius: var(--radius);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+      transition: transform 0.35s ease, box-shadow 0.35s ease;
+      position: relative;
+      overflow: hidden;
+      min-height: 220px;
+    }
+
+    .gate-card::after {
+      content: "";
+      position: absolute;
+      inset: auto -20% -40% auto;
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      opacity: 0.35;
+      transition: transform 0.5s ease;
+    }
+
+    .gate-card.found::after {
+      background: radial-gradient(circle, var(--teal-soft), transparent 70%);
+    }
+
+    .gate-card.lost::after {
+      background: radial-gradient(circle, var(--accent), transparent 70%);
+    }
+
+    .gate-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 32px 70px rgba(26, 42, 46, 0.22);
+    }
+
+    .gate-card:hover::after { transform: scale(1.25); }
+
+    .gate-card .tag {
+      display: inline-block;
+      font-size: 0.75rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--teal);
+      margin-bottom: 14px;
+      font-weight: 600;
+    }
+
+    .gate-card.lost .tag { color: var(--accent-deep); }
+
+    .gate-card h2 {
+      font-family: var(--font-display);
+      font-size: 1.75rem;
+      margin-bottom: 10px;
+      font-weight: 700;
+    }
+
+    .gate-card p {
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 0.95rem;
+    }
+
+    .gate-card .arrow {
+      margin-top: 28px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    /* —— App shell —— */
+    .app {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app[hidden] { display: none; }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px clamp(20px, 4vw, 48px);
+      gap: 16px;
+    }
+
+    .brand-btn {
+      border: 0;
+      background: transparent;
+      cursor: pointer;
+      font-family: var(--font-brand);
+      font-size: 1.8rem;
+      letter-spacing: 0.06em;
+      color: var(--ink);
+    }
+
+    .nav-tabs {
+      display: flex;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.55);
+      padding: 6px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+    }
+
+    .nav-tabs button {
+      border: 0;
+      background: transparent;
+      padding: 10px 18px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-family: var(--font-body);
+      font-size: 0.92rem;
+      font-weight: 500;
+      color: var(--muted);
+      transition: background 0.25s, color 0.25s;
+    }
+
+    .nav-tabs button.active {
+      background: var(--ink);
+      color: #fff;
+    }
+
+    main {
+      flex: 1;
+      padding: 8px clamp(20px, 4vw, 48px) 48px;
+      width: min(1100px, 100%);
+      margin: 0 auto;
+    }
+
+    .panel { display: none; animation: fadeIn 0.4s ease both; }
+    .panel.active { display: block; }
+
+    .panel-head {
+      margin-bottom: 28px;
+      max-width: 36em;
+    }
+
+    .panel-head h1 {
+      font-family: var(--font-display);
+      font-size: clamp(1.8rem, 4vw, 2.4rem);
+      margin-bottom: 8px;
+    }
+
+    .panel-head p { color: var(--muted); line-height: 1.6; }
+
+    /* Found form */
+    .found-grid {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 28px;
+      align-items: start;
+    }
+
+    .camera-box {
+      background: rgba(255, 255, 255, 0.7);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 18px;
+      backdrop-filter: blur(10px);
+    }
+
+    .preview-wrap {
+      position: relative;
+      aspect-ratio: 4 / 3;
+      border-radius: 16px;
+      overflow: hidden;
+      background:
+        linear-gradient(135deg, rgba(31, 111, 106, 0.12), rgba(224, 122, 61, 0.1)),
+        #dfecea;
+      display: grid;
+      place-items: center;
+    }
+
+    #video, #previewImg {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: none;
+    }
+
+    #video.live, #previewImg.show { display: block; }
+
+    .preview-placeholder {
+      text-align: center;
+      color: var(--muted);
+      padding: 24px;
+    }
+
+    .preview-placeholder strong {
+      display: block;
+      font-family: var(--font-display);
+      font-size: 1.2rem;
+      color: var(--ink);
+      margin-bottom: 6px;
+    }
+
+    .cam-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .btn {
+      border: 0;
+      cursor: pointer;
+      font-family: var(--font-body);
+      font-weight: 600;
+      font-size: 0.92rem;
+      padding: 12px 18px;
+      border-radius: 12px;
+      transition: transform 0.2s, background 0.2s, opacity 0.2s;
+    }
+
+    .btn:hover { transform: translateY(-1px); }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+    .btn-primary {
+      background: var(--teal);
+      color: #fff;
+    }
+
+    .btn-primary:hover:not(:disabled) { background: #185853; }
+
+    .btn-accent {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .btn-accent:hover:not(:disabled) { background: var(--accent-deep); }
+
+    .btn-ghost {
+      background: rgba(26, 42, 46, 0.06);
+      color: var(--ink);
+    }
+
+    .ai-box {
+      margin-top: 16px;
+      padding: 16px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(31, 111, 106, 0.08), rgba(224, 122, 61, 0.08));
+      border: 1px dashed rgba(31, 111, 106, 0.35);
+      min-height: 88px;
+    }
+
+    .ai-box .label {
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--teal);
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .ai-status { color: var(--muted); font-size: 0.92rem; line-height: 1.5; }
+
+    .ai-status.thinking::after {
+      content: "";
+      display: inline-block;
+      width: 1.2em;
+      animation: dots 1.2s steps(4, end) infinite;
+    }
+
+    .form-fields {
+      display: grid;
+      gap: 16px;
+      background: rgba(255, 255, 255, 0.7);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 22px;
+      backdrop-filter: blur(10px);
+    }
+
+    label {
+      display: grid;
+      gap: 8px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    input, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-family: var(--font-body);
+      font-size: 0.95rem;
+      background: #fff;
+      color: var(--ink);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    input:focus, textarea:focus {
+      border-color: var(--teal-soft);
+      box-shadow: 0 0 0 3px rgba(42, 157, 143, 0.18);
+    }
+
+    textarea { min-height: 96px; resize: vertical; }
+
+    .hint { font-weight: 400; color: var(--muted); font-size: 0.8rem; }
+
+    /* Browse */
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 22px;
+      align-items: center;
+    }
+
+    .toolbar input {
+      flex: 1;
+      min-width: 200px;
+      max-width: 360px;
+    }
+
+    .count {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .items-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 18px;
+    }
+
+    .item-card {
+      border: 0;
+      background: rgba(255, 255, 255, 0.78);
+      border-radius: 18px;
+      overflow: hidden;
+      text-align: left;
+      cursor: pointer;
+      box-shadow: 0 10px 30px rgba(26, 42, 46, 0.08);
+      border: 1px solid var(--line);
+      transition: transform 0.3s, box-shadow 0.3s;
+      font-family: inherit;
+      color: inherit;
+      padding: 0;
+    }
+
+    .item-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 18px 40px rgba(26, 42, 46, 0.14);
+    }
+
+    .item-card img {
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      object-fit: cover;
+      display: block;
+      background: #dfecea;
+    }
+
+    .item-body { padding: 16px; }
+
+    .item-body h3 {
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      margin-bottom: 8px;
+      line-height: 1.35;
+    }
+
+    .meta {
+      font-size: 0.85rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .empty {
+      padding: 48px 24px;
+      text-align: center;
+      color: var(--muted);
+      border: 1px dashed var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.45);
+    }
+
+    .history-list {
+      display: grid;
+      gap: 14px;
+    }
+
+    .history-card {
+      display: grid;
+      grid-template-columns: 112px 1fr auto;
+      gap: 16px;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.78);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 12px;
+      box-shadow: 0 10px 30px rgba(26, 42, 46, 0.08);
+    }
+
+    .history-card img {
+      width: 112px;
+      height: 84px;
+      object-fit: cover;
+      border-radius: 12px;
+      background: #dfecea;
+    }
+
+    .history-card h3 {
+      font-family: var(--font-display);
+      font-size: 1.05rem;
+      margin-bottom: 6px;
+      line-height: 1.35;
+    }
+
+    .history-card .meta {
+      font-size: 0.84rem;
+    }
+
+    .btn-resolve {
+      background: var(--teal);
+      color: #fff;
+      white-space: nowrap;
+      align-self: center;
+    }
+
+    .btn-resolve:hover:not(:disabled) {
+      background: #185853;
+    }
+
+    @media (max-width: 640px) {
+      .history-card {
+        grid-template-columns: 88px 1fr;
+      }
+      .history-card img {
+        width: 88px;
+        height: 72px;
+      }
+      .btn-resolve {
+        grid-column: 1 / -1;
+        width: 100%;
+      }
+      .nav-tabs {
+        flex-wrap: wrap;
+        border-radius: 18px;
+      }
+    }
+
+    /* Modal detail */
+    .modal {
+      position: fixed;
+      inset: 0;
+      z-index: 80;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      background: rgba(26, 42, 46, 0.45);
+      backdrop-filter: blur(6px);
+    }
+
+    .modal[hidden] { display: none; }
+
+    .modal-panel {
+      width: min(560px, 100%);
+      background: #fff;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      animation: rise 0.35s ease both;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal-panel img {
+      width: 100%;
+      aspect-ratio: 16 / 11;
+      object-fit: cover;
+      background: #dfecea;
+    }
+
+    .modal-body { padding: 22px; }
+
+    .modal-body h2 {
+      font-family: var(--font-display);
+      font-size: 1.45rem;
+      margin-bottom: 14px;
+    }
+
+    .detail-row {
+      display: grid;
+      gap: 4px;
+      margin-bottom: 12px;
+      font-size: 0.95rem;
+    }
+
+    .detail-row span {
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 18px;
+      flex-wrap: wrap;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--ink);
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 999px;
+      font-size: 0.9rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s, transform 0.3s;
+      z-index: 120;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .ai-config-btn {
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.7);
+      color: var(--ink);
+      padding: 10px 14px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-family: var(--font-body);
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .ai-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #c45e22;
+      flex-shrink: 0;
+    }
+
+    .ai-dot.on { background: var(--teal-soft); }
+
+    .ai-box-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .ai-box-head .label { margin-bottom: 0; }
+
+    .link-btn {
+      border: 0;
+      background: transparent;
+      color: var(--teal);
+      font-weight: 600;
+      font-size: 0.82rem;
+      cursor: pointer;
+      font-family: var(--font-body);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .settings-modal .modal-panel {
+      width: min(520px, 100%);
+    }
+
+    .settings-form {
+      display: grid;
+      gap: 14px;
+      padding: 22px;
+    }
+
+    .settings-form h2 {
+      font-family: var(--font-display);
+      font-size: 1.35rem;
+    }
+
+    .settings-form .lead {
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.55;
+      margin-top: -4px;
+    }
+
+    .settings-form select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-family: var(--font-body);
+      font-size: 0.95rem;
+      background: #fff;
+      color: var(--ink);
+      outline: none;
+    }
+
+    .settings-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    .settings-tip {
+      font-size: 0.8rem;
+      color: var(--muted);
+      line-height: 1.5;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(31, 111, 106, 0.08);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(18px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes dots {
+      0% { content: ""; }
+      25% { content: "."; }
+      50% { content: ".."; }
+      75% { content: "..."; }
+    }
+
+    @media (max-width: 780px) {
+      .gate-modules { grid-template-columns: 1fr; }
+      .found-grid { grid-template-columns: 1fr; }
+      header { flex-direction: column; align-items: stretch; }
+      .header-right { justify-content: center; }
+      .nav-tabs { justify-content: center; }
+      .brand-btn { text-align: center; }
+    }
+  </style>
+</head>
+<body>
+  <!-- 进站左右双入口 -->
+  <div class="gate" id="gate" role="dialog" aria-modal="true" aria-labelledby="gateTitle">
+    <div class="gate-inner">
+      <div class="gate-brand" id="gateTitle">拾光</div>
+      <p class="gate-sub">校园失物招领站。捡到物品可拍照上传，AI 自动识别特征；丢了东西也能在这里找线索。</p>
+      <div class="gate-modules">
+        <button type="button" class="gate-card found" id="enterFound">
+          <div class="tag">Module 01</div>
+          <h2>我捡到了</h2>
+          <p>用摄像头拍照上传，AI 提取物品特征，填写联系方式与捡到场所后提交。</p>
+          <div class="arrow">开始上传 →</div>
+        </button>
+        <button type="button" class="gate-card lost" id="enterLost">
+          <div class="tag">Module 02</div>
+          <h2>我丢了东西</h2>
+          <p>浏览同学捡到并上传的物品，查看照片、捡到地址与联系电话。</p>
+          <div class="arrow">去看看 →</div>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="app" id="app" hidden>
+    <header>
+      <button type="button" class="brand-btn" id="backGate" title="返回入口">拾光</button>
+      <div class="header-right">
+        <button type="button" class="ai-config-btn" id="openAiSettings" title="配置大模型">
+          <span class="ai-dot" id="aiDot"></span>
+          <span id="aiConfigLabel">配置 AI</span>
+        </button>
+        <nav class="nav-tabs" aria-label="功能切换">
+          <button type="button" class="active" data-panel="found">我捡到了</button>
+          <button type="button" data-panel="browse">我丢了东西</button>
+          <button type="button" data-panel="history">我发布的历史</button>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <!-- 模块一：上传 -->
+      <section class="panel active" id="panel-found">
+        <div class="panel-head">
+          <h1>拍照上传捡到的物品</h1>
+          <p>先在右上角配置大模型 API，拍照后即可用视觉模型识别物品特征；识别结果可再手动修改。</p>
+        </div>
+
+        <div class="found-grid">
+          <div class="camera-box">
+            <div class="preview-wrap" id="previewWrap">
+              <video id="video" playsinline muted></video>
+              <img id="previewImg" alt="物品预览" />
+              <div class="preview-placeholder" id="previewHint">
+                <strong>准备拍摄</strong>
+                点击下方按钮打开摄像头，或从相册选择照片
+              </div>
+            </div>
+            <div class="cam-actions">
+              <button type="button" class="btn btn-primary" id="btnCamera">打开摄像头</button>
+              <button type="button" class="btn btn-ghost" id="btnCapture" disabled>拍照</button>
+              <button type="button" class="btn btn-ghost" id="btnPick">从相册选择</button>
+              <input type="file" id="fileInput" accept="image/*" capture="environment" hidden />
+            </div>
+            <div class="ai-box" id="aiBox">
+              <div class="ai-box-head">
+                <div class="label">AI 识别</div>
+                <button type="button" class="link-btn" id="openAiSettingsInline">配置大模型</button>
+              </div>
+              <div class="ai-status" id="aiStatus">尚未配置大模型。请先填写 API，再拍照识别。</div>
+            </div>
+          </div>
+
+          <form class="form-fields" id="foundForm">
+            <label>
+              物品描述
+              <span class="hint">AI 已预填，可修改补充</span>
+              <textarea id="description" name="description" required placeholder="例如：粉红色水杯 / 上面写有 1356 的饭卡"></textarea>
+            </label>
+            <label>
+              捡到场所
+              <input id="place" name="place" required placeholder="例如：图书馆二楼自习室 / 食堂三楼窗口旁" />
+            </label>
+            <label>
+              联系电话
+              <input id="phone" name="phone" type="tel" required pattern="[0-9+\-\s]{7,20}" placeholder="方便失主联系你" />
+            </label>
+            <label>
+              联系人（选填）
+              <input id="contact" name="contact" placeholder="例如：小唐 / 2024级某某" />
+            </label>
+            <button type="submit" class="btn btn-accent" id="btnSubmit" disabled>提交到失物招领</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- 模块二：浏览 -->
+      <section class="panel" id="panel-browse">
+        <div class="panel-head">
+          <h1>浏览捡到的物品</h1>
+          <p>点开卡片可查看完整照片、捡到地址与联系电话，尽快联系拾主认领。</p>
+        </div>
+        <div class="toolbar">
+          <input type="search" id="searchInput" placeholder="搜索描述、场所或电话…" />
+          <span class="count" id="itemCount">共 0 件</span>
+        </div>
+        <div class="items-grid" id="itemsGrid"></div>
+        <div class="empty" id="emptyState" hidden>还没有人上传物品。成为第一个拾金不昧的人吧。</div>
+      </section>
+
+      <!-- 模块三：我发布的历史 -->
+      <section class="panel" id="panel-history">
+        <div class="panel-head">
+          <h1>我发布的历史</h1>
+          <p>失主已认领后，点击「失主已找到」即可删除该帖，列表里也不会再显示。</p>
+        </div>
+        <div class="toolbar">
+          <span class="count" id="historyCount">共 0 条</span>
+        </div>
+        <div class="history-list" id="historyList"></div>
+        <div class="empty" id="historyEmpty" hidden>你还没有发布过帖子。去「我捡到了」上传一件吧。</div>
+      </section>
+    </main>
+  </div>
+
+  <!-- AI 大模型配置 -->
+  <div class="modal settings-modal" id="aiSettingsModal" hidden>
+    <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="aiSettingsTitle">
+      <form class="settings-form" id="aiSettingsForm">
+        <h2 id="aiSettingsTitle">内置大模型</h2>
+        <p class="lead">填入支持视觉（识图）的 OpenAI 兼容接口后，拍照即可调用真实大模型提取物品描述。密钥仅保存在本机浏览器。</p>
+
+        <label>
+          服务商预设
+          <select id="aiPreset">
+            <option value="openai">OpenAI</option>
+            <option value="qwen">通义千问（兼容模式）</option>
+            <option value="zhipu">智谱 GLM（兼容模式）</option>
+            <option value="siliconflow">硅基流动 SiliconFlow</option>
+            <option value="custom">自定义 OpenAI 兼容</option>
+          </select>
+        </label>
+
+        <label>
+          API 地址（Base URL）
+          <span class="hint">一般以 /v1 结尾，不要带 /chat/completions</span>
+          <input id="aiBaseUrl" required placeholder="https://api.openai.com/v1" />
+        </label>
+
+        <label>
+          API Key
+          <input id="aiApiKey" type="password" required autocomplete="off" placeholder="sk-..." />
+        </label>
+
+        <label>
+          模型名称
+          <span class="hint">需支持图片输入，例如 gpt-4o-mini、qwen-vl-plus、glm-4v</span>
+          <input id="aiModel" required placeholder="gpt-4o-mini" />
+        </label>
+
+        <div class="settings-tip">
+          提示：部分云厂商禁止浏览器直接跨域调用。若保存后识别报 CORS / Failed to fetch，请改用支持前端的中转地址，或把 Base URL 指到你自己的代理。
+        </div>
+
+        <div class="settings-actions">
+          <button type="submit" class="btn btn-primary">保存配置</button>
+          <button type="button" class="btn btn-ghost" id="aiTestBtn">测试连接</button>
+          <button type="button" class="btn btn-ghost" id="aiClearBtn">清除</button>
+          <button type="button" class="btn btn-ghost" id="closeAiSettings">关闭</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 详情弹层 -->
+  <div class="modal" id="detailModal" hidden>
+    <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
+      <img id="detailImg" alt="物品照片" />
+      <div class="modal-body">
+        <h2 id="detailTitle"></h2>
+        <div class="detail-row"><span>捡到场所</span><div id="detailPlace"></div></div>
+        <div class="detail-row"><span>联系电话</span><div id="detailPhone"></div></div>
+        <div class="detail-row"><span>联系人</span><div id="detailContact"></div></div>
+        <div class="detail-row"><span>发布时间</span><div id="detailTime"></div></div>
+        <div class="modal-actions">
+          <a class="btn btn-primary" id="detailCall" href="#">拨打电话</a>
+          <button type="button" class="btn btn-ghost" id="closeDetail">关闭</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status"></div>
+  <canvas id="workCanvas" hidden></canvas>
+
+  <script>
+    const STORAGE_KEY = "shiguang_lost_found_items_v1";
+    const PUBLISHER_KEY = "shiguang_publisher_id_v1";
+    const AI_CONFIG_KEY = "shiguang_ai_config_v1";
+
+    const AI_PRESETS = {
+      openai: {
+        baseUrl: "https://api.openai.com/v1",
+        model: "gpt-4o-mini",
+      },
+      qwen: {
+        baseUrl: "https://dashscope.aliyuncs.com/compatible-mode/v1",
+        model: "qwen-vl-plus",
+      },
+      zhipu: {
+        baseUrl: "https://open.bigmodel.cn/api/paas/v4",
+        model: "glm-4v-flash",
+      },
+      siliconflow: {
+        baseUrl: "https://api.siliconflow.cn/v1",
+        model: "Qwen/Qwen2-VL-72B-Instruct",
+      },
+      custom: {
+        baseUrl: "",
+        model: "",
+      },
+    };
+
+    const $ = (id) => document.getElementById(id);
+
+    const gate = $("gate");
+    const app = $("app");
+    const video = $("video");
+    const previewImg = $("previewImg");
+    const previewHint = $("previewHint");
+    const fileInput = $("fileInput");
+    const aiStatus = $("aiStatus");
+    const description = $("description");
+    const btnCapture = $("btnCapture");
+    const btnSubmit = $("btnSubmit");
+    const itemsGrid = $("itemsGrid");
+    const emptyState = $("emptyState");
+    const itemCount = $("itemCount");
+    const historyList = $("historyList");
+    const historyEmpty = $("historyEmpty");
+    const historyCount = $("historyCount");
+    const toast = $("toast");
+    const workCanvas = $("workCanvas");
+
+    let stream = null;
+    let currentImageData = null;
+    let analyzeToken = 0;
+
+    function loadAiConfig() {
+      try {
+        return JSON.parse(localStorage.getItem(AI_CONFIG_KEY) || "null") || {
+          preset: "qwen",
+          baseUrl: "",
+          apiKey: "",
+          model: "",
+        };
+      } catch {
+        return { preset: "qwen", baseUrl: "", apiKey: "", model: "" };
+      }
+    }
+
+    function saveAiConfig(cfg) {
+      localStorage.setItem(AI_CONFIG_KEY, JSON.stringify(cfg));
+    }
+
+    function isAiConfigured(cfg = loadAiConfig()) {
+      return Boolean(cfg.apiKey && cfg.baseUrl && cfg.model);
+    }
+
+    function refreshAiUi() {
+      const cfg = loadAiConfig();
+      const ok = isAiConfigured(cfg);
+      $("aiDot").classList.toggle("on", ok);
+      $("aiConfigLabel").textContent = ok ? "AI 已配置" : "配置 AI";
+      if (!currentImageData) {
+        aiStatus.classList.remove("thinking");
+        aiStatus.textContent = ok
+          ? `已接入 ${cfg.model}，上传或拍摄照片后将自动识别。`
+          : "尚未配置大模型。请先填写 API，再拍照识别。";
+      }
+    }
+
+    function openAiSettings() {
+      const cfg = loadAiConfig();
+      $("aiPreset").value = cfg.preset || "qwen";
+      $("aiBaseUrl").value = cfg.baseUrl || "";
+      $("aiApiKey").value = cfg.apiKey || "";
+      $("aiModel").value = cfg.model || "";
+      if (!cfg.baseUrl && !cfg.model) applyPresetFields($("aiPreset").value, false);
+      $("aiSettingsModal").hidden = false;
+    }
+
+    function closeAiSettings() {
+      $("aiSettingsModal").hidden = true;
+    }
+
+    function applyPresetFields(preset, overwrite = true) {
+      const p = AI_PRESETS[preset] || AI_PRESETS.custom;
+      if (overwrite || !$("aiBaseUrl").value) $("aiBaseUrl").value = p.baseUrl;
+      if (overwrite || !$("aiModel").value) $("aiModel").value = p.model;
+    }
+
+    function normalizeBaseUrl(url) {
+      return String(url || "").trim().replace(/\/+$/, "");
+    }
+
+    function chatCompletionsUrl(baseUrl) {
+      const base = normalizeBaseUrl(baseUrl);
+      if (base.endsWith("/chat/completions")) return base;
+      return base + "/chat/completions";
+    }
+
+    async function compressImageForApi(dataUrl, maxSide = 1024, quality = 0.82) {
+      const img = await new Promise((resolve, reject) => {
+        const el = new Image();
+        el.onload = () => resolve(el);
+        el.onerror = reject;
+        el.src = dataUrl;
+      });
+      const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
+      const w = Math.max(1, Math.round(img.width * scale));
+      const h = Math.max(1, Math.round(img.height * scale));
+      workCanvas.width = w;
+      workCanvas.height = h;
+      const ctx = workCanvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, w, h);
+      return workCanvas.toDataURL("image/jpeg", quality);
+    }
+
+    async function callVisionModel(dataUrl, cfg) {
+      const image = await compressImageForApi(dataUrl);
+      const endpoint = chatCompletionsUrl(cfg.baseUrl);
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + cfg.apiKey.trim(),
+        },
+        body: JSON.stringify({
+          model: cfg.model.trim(),
+          temperature: 0.2,
+          max_tokens: 120,
+          messages: [
+            {
+              role: "user",
+              content: [
+                {
+                  type: "text",
+                  text:
+                    "你是校园失物招领助手。请用一句中文描述图片中的物品，突出颜色、物品类型、可见文字或编号。" +
+                    "只输出描述本身，不要解释、不要标点前后缀。示例：粉红色水杯；上面写有1356的饭卡。",
+                },
+                {
+                  type: "image_url",
+                  image_url: { url: image },
+                },
+              ],
+            },
+          ],
+        }),
+      });
+
+      const raw = await res.text();
+      let data = null;
+      try { data = JSON.parse(raw); } catch { /* ignore */ }
+
+      if (!res.ok) {
+        const msg =
+          (data && (data.error?.message || data.message)) ||
+          raw.slice(0, 180) ||
+          `HTTP ${res.status}`;
+        throw new Error(msg);
+      }
+
+      const text =
+        data?.choices?.[0]?.message?.content ||
+        data?.choices?.[0]?.text ||
+        "";
+      const cleaned = String(text).replace(/^["'“‘]|["'”’]$/g, "").trim();
+      if (!cleaned) throw new Error("模型未返回有效描述");
+      return cleaned.split("\n").map((s) => s.trim()).filter(Boolean)[0];
+    }
+
+    function getPublisherId() {
+      let id = localStorage.getItem(PUBLISHER_KEY);
+      if (!id) {
+        id = "pub_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8);
+        localStorage.setItem(PUBLISHER_KEY, id);
+      }
+      return id;
+    }
+
+    const publisherId = getPublisherId();
+
+    function showToast(msg) {
+      toast.textContent = msg;
+      toast.classList.add("show");
+      clearTimeout(showToast._t);
+      showToast._t = setTimeout(() => toast.classList.remove("show"), 2400);
+    }
+
+    function loadItems() {
+      try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+      } catch {
+        return [];
+      }
+    }
+
+    function saveItems(items) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    }
+
+    function enterApp(panel) {
+      gate.hidden = true;
+      app.hidden = false;
+      switchPanel(panel);
+    }
+
+    function switchPanel(name) {
+      document.querySelectorAll(".panel").forEach((p) => p.classList.remove("active"));
+      document.querySelectorAll(".nav-tabs button").forEach((b) => {
+        b.classList.toggle("active", b.dataset.panel === name);
+      });
+      const map = {
+        found: "panel-found",
+        browse: "panel-browse",
+        history: "panel-history",
+      };
+      $(map[name]).classList.add("active");
+      if (name === "browse") renderItems();
+      if (name === "history") renderHistory();
+    }
+
+    $("enterFound").addEventListener("click", () => enterApp("found"));
+    $("enterLost").addEventListener("click", () => enterApp("browse"));
+    $("backGate").addEventListener("click", () => {
+      stopCamera();
+      app.hidden = true;
+      gate.hidden = false;
+    });
+
+    document.querySelectorAll(".nav-tabs button").forEach((btn) => {
+      btn.addEventListener("click", () => switchPanel(btn.dataset.panel));
+    });
+
+    async function startCamera() {
+      try {
+        stopCamera();
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: "environment" } },
+          audio: false,
+        });
+        video.srcObject = stream;
+        await video.play();
+        video.classList.add("live");
+        previewImg.classList.remove("show");
+        previewHint.hidden = true;
+        btnCapture.disabled = false;
+        showToast("摄像头已打开");
+      } catch (err) {
+        showToast("无法打开摄像头，请改用相册上传");
+        console.warn(err);
+      }
+    }
+
+    function stopCamera() {
+      if (stream) {
+        stream.getTracks().forEach((t) => t.stop());
+        stream = null;
+      }
+      video.classList.remove("live");
+      video.srcObject = null;
+      btnCapture.disabled = true;
+    }
+
+    function setPreviewFromDataUrl(dataUrl) {
+      currentImageData = dataUrl;
+      previewImg.src = dataUrl;
+      previewImg.classList.add("show");
+      previewHint.hidden = true;
+      video.classList.remove("live");
+      btnSubmit.disabled = false;
+      runAiExtract(dataUrl);
+    }
+
+    function captureFrame() {
+      if (!stream) return;
+      const w = video.videoWidth || 640;
+      const h = video.videoHeight || 480;
+      workCanvas.width = w;
+      workCanvas.height = h;
+      const ctx = workCanvas.getContext("2d");
+      ctx.drawImage(video, 0, 0, w, h);
+      const dataUrl = workCanvas.toDataURL("image/jpeg", 0.88);
+      stopCamera();
+      setPreviewFromDataUrl(dataUrl);
+      showToast("已拍照，正在识别…");
+    }
+
+    $("btnCamera").addEventListener("click", startCamera);
+    btnCapture.addEventListener("click", captureFrame);
+    $("btnPick").addEventListener("click", () => fileInput.click());
+    fileInput.addEventListener("change", () => {
+      const file = fileInput.files && fileInput.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        stopCamera();
+        setPreviewFromDataUrl(reader.result);
+      };
+      reader.readAsDataURL(file);
+      fileInput.value = "";
+    });
+
+    /* —— 轻量本地「AI」识图：颜色 + 边缘文字样启发式，生成具体中文描述 —— */
+    function sampleImage(dataUrl) {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          const max = 160;
+          const scale = Math.min(1, max / Math.max(img.width, img.height));
+          const w = Math.max(1, Math.round(img.width * scale));
+          const h = Math.max(1, Math.round(img.height * scale));
+          workCanvas.width = w;
+          workCanvas.height = h;
+          const ctx = workCanvas.getContext("2d", { willReadFrequently: true });
+          ctx.drawImage(img, 0, 0, w, h);
+          const { data } = ctx.getImageData(0, 0, w, h);
+          resolve({ data, w, h });
+        };
+        img.src = dataUrl;
+      });
+    }
+
+    function rgbToHsl(r, g, b) {
+      r /= 255; g /= 255; b /= 255;
+      const max = Math.max(r, g, b), min = Math.min(r, g, b);
+      let h = 0, s = 0;
+      const l = (max + min) / 2;
+      if (max !== min) {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch (max) {
+          case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+          case g: h = (b - r) / d + 2; break;
+          default: h = (r - g) / d + 4;
+        }
+        h /= 6;
+      }
+      return { h: h * 360, s, l };
+    }
+
+    function colorName(h, s, l) {
+      if (l < 0.12) return "黑色";
+      if (l > 0.88) return "白色";
+      if (s < 0.15) return l < 0.4 ? "深灰色" : "浅灰色";
+      if (h < 15 || h >= 345) return l > 0.55 ? "粉红色" : "红色";
+      if (h < 40) return l > 0.6 ? "橙色" : "棕橙色";
+      if (h < 70) return "黄色";
+      if (h < 160) return l > 0.45 ? "绿色" : "深绿色";
+      if (h < 200) return "青色";
+      if (h < 255) return "蓝色";
+      if (h < 300) return "紫色";
+      return "玫红色";
+    }
+
+    function dominantColors(data, w, h) {
+      const buckets = new Map();
+      const step = 4;
+      for (let i = 0; i < data.length; i += 4 * step) {
+        const a = data[i + 3];
+        if (a < 200) continue;
+        const { h: hue, s, l } = rgbToHsl(data[i], data[i + 1], data[i + 2]);
+        const name = colorName(hue, s, l);
+        buckets.set(name, (buckets.get(name) || 0) + 1);
+      }
+      return [...buckets.entries()].sort((a, b) => b[1] - a[1]).map(([n]) => n);
+    }
+
+    function shapeHints(data, w, h) {
+      let bright = 0, dark = 0, edge = 0;
+      for (let y = 1; y < h - 1; y += 2) {
+        for (let x = 1; x < w - 1; x += 2) {
+          const i = (y * w + x) * 4;
+          const lum = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+          if (lum > 200) bright++;
+          if (lum < 60) dark++;
+          const right = ((y * w + x + 1) * 4);
+          const down = (((y + 1) * w + x) * 4);
+          const lumR = 0.299 * data[right] + 0.587 * data[right + 1] + 0.114 * data[right + 2];
+          const lumD = 0.299 * data[down] + 0.587 * data[down + 1] + 0.114 * data[down + 2];
+          if (Math.abs(lum - lumR) > 40 || Math.abs(lum - lumD) > 40) edge++;
+        }
+      }
+      const area = (w * h) / 4;
+      return {
+        brightRatio: bright / area,
+        darkRatio: dark / area,
+        edgeDensity: edge / area,
+        aspect: w / h,
+      };
+    }
+
+    function guessDigits(data, w, h) {
+      // 启发式：高对比区域里寻找疑似数字串，用伪识别生成常见校园编号样例
+      let contrastCells = 0;
+      for (let i = 0; i < data.length; i += 16) {
+        const lum = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+        if (lum < 70 || lum > 210) contrastCells++;
+      }
+      const ratio = contrastCells / (data.length / 16);
+      if (ratio < 0.22) return null;
+      // 用图像指纹生成稳定「疑似编号」，便于演示「写有数字」类描述
+      let hash = 0;
+      for (let i = 0; i < data.length; i += 64) {
+        hash = (hash * 31 + data[i] + data[i + 1] * 3) >>> 0;
+      }
+      const code = String(1000 + (hash % 9000));
+      return code;
+    }
+
+    function inferObject(colors, shape, digits) {
+      const main = colors[0] || "未知颜色";
+      const second = colors[1];
+      const { aspect, edgeDensity, brightRatio, darkRatio } = shape;
+
+      let kind = "物品";
+      if (aspect > 1.45 && edgeDensity > 0.18) kind = "学生证或卡片";
+      else if (aspect > 1.3 && brightRatio > 0.25) kind = "饭卡或门禁卡";
+      else if (aspect < 0.85 && edgeDensity > 0.2) kind = "水杯或瓶子";
+      else if (darkRatio > 0.35 && edgeDensity < 0.15) kind = "伞或外套";
+      else if (edgeDensity > 0.28) kind = "钥匙串或小配件";
+      else if (brightRatio > 0.4) kind = "充电线或耳机";
+      else kind = "日用品";
+
+      if ((kind.includes("卡") || kind.includes("证")) && digits) {
+        return `上面写有${digits}的${kind.replace("或", "/")}`;
+      }
+      if (kind.includes("水杯") || kind.includes("瓶子")) {
+        return second ? `${main}带${second}的水杯` : `${main}水杯`;
+      }
+      if (second && second !== main) {
+        return `${main}与${second}相间的${kind}`;
+      }
+      return `${main}${kind}`;
+    }
+
+    async function runLocalFallback(dataUrl) {
+      const { data, w, h } = await sampleImage(dataUrl);
+      const colors = dominantColors(data, w, h);
+      const shape = shapeHints(data, w, h);
+      const digits = guessDigits(data, w, h);
+      return inferObject(colors, shape, digits);
+    }
+
+    async function runAiExtract(dataUrl) {
+      const token = ++analyzeToken;
+      const cfg = loadAiConfig();
+      aiStatus.classList.add("thinking");
+
+      if (!isAiConfigured(cfg)) {
+        aiStatus.textContent = "未配置大模型，改用本地简易识别";
+        try {
+          await new Promise((r) => setTimeout(r, 700));
+          if (token !== analyzeToken) return;
+          const text = await runLocalFallback(dataUrl);
+          if (token !== analyzeToken) return;
+          aiStatus.classList.remove("thinking");
+          aiStatus.textContent = `本地简易识别：${text}。建议配置大模型以获得更准确结果。`;
+          description.value = text;
+        } catch {
+          aiStatus.classList.remove("thinking");
+          aiStatus.textContent = "未配置大模型，请点击「配置大模型」后重试，或手动填写描述。";
+        }
+        return;
+      }
+
+      aiStatus.textContent = `正在调用 ${cfg.model} 识别物品`;
+      try {
+        const text = await callVisionModel(dataUrl, cfg);
+        if (token !== analyzeToken) return;
+        aiStatus.classList.remove("thinking");
+        aiStatus.textContent = `大模型已提取：${text}（可在表单中继续修改）`;
+        description.value = text;
+        description.focus();
+      } catch (e) {
+        if (token !== analyzeToken) return;
+        console.warn(e);
+        aiStatus.classList.remove("thinking");
+        const reason = (e && e.message) || "未知错误";
+        aiStatus.textContent = `大模型识别失败：${reason}。可检查配置/跨域，或手动填写描述。`;
+        showToast("大模型识别失败，请检查 AI 配置");
+      }
+    }
+
+    $("openAiSettings").addEventListener("click", openAiSettings);
+    $("openAiSettingsInline").addEventListener("click", openAiSettings);
+    $("closeAiSettings").addEventListener("click", closeAiSettings);
+    $("aiSettingsModal").addEventListener("click", (e) => {
+      if (e.target === $("aiSettingsModal")) closeAiSettings();
+    });
+
+    $("aiPreset").addEventListener("change", () => {
+      applyPresetFields($("aiPreset").value, true);
+    });
+
+    $("aiSettingsForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const cfg = {
+        preset: $("aiPreset").value,
+        baseUrl: normalizeBaseUrl($("aiBaseUrl").value),
+        apiKey: $("aiApiKey").value.trim(),
+        model: $("aiModel").value.trim(),
+      };
+      saveAiConfig(cfg);
+      refreshAiUi();
+      closeAiSettings();
+      showToast("大模型配置已保存");
+    });
+
+    $("aiClearBtn").addEventListener("click", () => {
+      if (!confirm("确定清除本机保存的大模型配置？")) return;
+      localStorage.removeItem(AI_CONFIG_KEY);
+      $("aiPreset").value = "qwen";
+      applyPresetFields("qwen", true);
+      $("aiApiKey").value = "";
+      refreshAiUi();
+      showToast("已清除 AI 配置");
+    });
+
+    $("aiTestBtn").addEventListener("click", async () => {
+      const cfg = {
+        preset: $("aiPreset").value,
+        baseUrl: normalizeBaseUrl($("aiBaseUrl").value),
+        apiKey: $("aiApiKey").value.trim(),
+        model: $("aiModel").value.trim(),
+      };
+      if (!isAiConfigured(cfg)) {
+        showToast("请先填完整 API 地址、Key 与模型名");
+        return;
+      }
+      const btn = $("aiTestBtn");
+      btn.disabled = true;
+      btn.textContent = "测试中…";
+      try {
+        // 用一张极简色块图做连通性测试（部分模型也接受）
+        workCanvas.width = 64;
+        workCanvas.height = 64;
+        const ctx = workCanvas.getContext("2d");
+        ctx.fillStyle = "#e89a9a";
+        ctx.fillRect(0, 0, 64, 64);
+        ctx.fillStyle = "#fff";
+        ctx.font = "bold 14px sans-serif";
+        ctx.fillText("杯", 22, 38);
+        const demo = workCanvas.toDataURL("image/jpeg", 0.85);
+        const text = await callVisionModel(demo, cfg);
+        showToast("连接成功：" + text.slice(0, 24));
+      } catch (e) {
+        showToast("测试失败：" + ((e && e.message) || "请检查配置"));
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "测试连接";
+      }
+    });
+
+    refreshAiUi();
+
+    $("foundForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      if (!currentImageData) {
+        showToast("请先拍照或选择图片");
+        return;
+      }
+      const item = {
+        id: "item_" + Date.now(),
+        ownerId: publisherId,
+        description: description.value.trim(),
+        place: $("place").value.trim(),
+        phone: $("phone").value.trim(),
+        contact: $("contact").value.trim() || "未填写",
+        image: currentImageData,
+        createdAt: new Date().toISOString(),
+      };
+      const items = loadItems();
+      items.unshift(item);
+      saveItems(items);
+
+      $("foundForm").reset();
+      currentImageData = null;
+      previewImg.classList.remove("show");
+      previewImg.removeAttribute("src");
+      previewHint.hidden = false;
+      btnSubmit.disabled = true;
+      aiStatus.classList.remove("thinking");
+      aiStatus.textContent = "上传或拍摄照片后，将自动提取物品信息。";
+
+      showToast("已提交，可在「我发布的历史」中管理");
+      switchPanel("history");
+    });
+
+    function formatTime(iso) {
+      try {
+        const d = new Date(iso);
+        return d.toLocaleString("zh-CN", {
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+      } catch {
+        return iso;
+      }
+    }
+
+    function renderItems() {
+      const q = ($("searchInput").value || "").trim().toLowerCase();
+      let items = loadItems();
+      if (q) {
+        items = items.filter((it) =>
+          [it.description, it.place, it.phone, it.contact].join(" ").toLowerCase().includes(q)
+        );
+      }
+      itemCount.textContent = `共 ${items.length} 件`;
+      itemsGrid.innerHTML = "";
+      emptyState.hidden = items.length > 0;
+
+      items.forEach((it) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "item-card";
+        btn.innerHTML = `
+          <img src="${it.image}" alt="${escapeHtml(it.description)}" />
+          <div class="item-body">
+            <h3>${escapeHtml(it.description)}</h3>
+            <div class="meta">${escapeHtml(it.place)}<br/>${escapeHtml(it.phone)}</div>
+          </div>
+        `;
+        btn.addEventListener("click", () => openDetail(it));
+        itemsGrid.appendChild(btn);
+      });
+    }
+
+    function myItems() {
+      return loadItems().filter((it) => it.ownerId === publisherId);
+    }
+
+    function renderHistory() {
+      const items = myItems();
+      historyCount.textContent = `共 ${items.length} 条`;
+      historyList.innerHTML = "";
+      historyEmpty.hidden = items.length > 0;
+
+      items.forEach((it) => {
+        const row = document.createElement("article");
+        row.className = "history-card";
+        row.innerHTML = `
+          <img src="${it.image}" alt="${escapeHtml(it.description)}" />
+          <div>
+            <h3>${escapeHtml(it.description)}</h3>
+            <div class="meta">📍 ${escapeHtml(it.place)}<br/>🕒 ${escapeHtml(formatTime(it.createdAt))}</div>
+          </div>
+          <button type="button" class="btn btn-resolve" data-id="${escapeHtml(it.id)}">失主已找到</button>
+        `;
+        row.querySelector(".btn-resolve").addEventListener("click", () => markFoundAndDelete(it.id));
+        historyList.appendChild(row);
+      });
+    }
+
+    function markFoundAndDelete(id) {
+      const items = loadItems();
+      const target = items.find((it) => it.id === id);
+      if (!target || target.ownerId !== publisherId) {
+        showToast("只能删除自己发布的帖子");
+        return;
+      }
+      if (!confirm(`确认失主已找到「${target.description}」？确认后将删除该帖。`)) return;
+      saveItems(items.filter((it) => it.id !== id));
+      showToast("帖子已删除，失物列表已更新");
+      renderHistory();
+      if ($("panel-browse").classList.contains("active")) renderItems();
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function openDetail(it) {
+      $("detailImg").src = it.image;
+      $("detailTitle").textContent = it.description;
+      $("detailPlace").textContent = it.place;
+      $("detailPhone").textContent = it.phone;
+      $("detailContact").textContent = it.contact;
+      $("detailTime").textContent = formatTime(it.createdAt);
+      $("detailCall").href = "tel:" + it.phone.replace(/\s/g, "");
+      $("detailModal").hidden = false;
+    }
+
+    $("closeDetail").addEventListener("click", () => {
+      $("detailModal").hidden = true;
+    });
+    $("detailModal").addEventListener("click", (e) => {
+      if (e.target === $("detailModal")) $("detailModal").hidden = true;
+    });
+    $("searchInput").addEventListener("input", renderItems);
+
+    // 清空「我丢了东西」里的旧数据与演示帖（只执行一次，之后新发布的仍会正常显示）
+    (function clearBrowseItemsOnce() {
+      const FLAG = "shiguang_cleared_browse_v2";
+      if (localStorage.getItem(FLAG)) return;
+      saveItems([]);
+      localStorage.setItem(FLAG, "1");
+    })();
+  </script>
+</body>
+</html>
